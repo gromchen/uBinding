@@ -1,2 +1,7 @@
 uBinding/Library/
 uBinding/Temp/
+*.suo
+uBinding/obj/
+uBinding/*.sln
+uBinding/*.DotSettings
+uBinding/*.csproj
