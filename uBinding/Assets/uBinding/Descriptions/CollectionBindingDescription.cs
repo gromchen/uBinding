@@ -1,10 +1,11 @@
 using System;
 using uBinding.Binders;
+using uBinding.BindingSets;
 using uBinding.Collections;
 
 namespace uBinding.Descriptions
 {
-    public class CollectionBindingDescription<T> : IDescription
+    public class CollectionBindingDescription<T>
     {
         private readonly Action<BindingCollectionChange<T>> _action;
         private readonly IReadonlyObservableCollection<T> _collection;
@@ -16,9 +17,17 @@ namespace uBinding.Descriptions
             _action = action;
         }
 
+        public BindingSet Set { private get; set; }
+
         public IBinder Apply()
         {
-            return new CollectionBinder<T>(_collection, _action);
+            var binder = new CollectionBinder<T>(_collection, _action);
+
+            if (Set == null) throw new InvalidOperationException("Binding set is not set");
+                
+            Set.Add(binder);
+            binder.Start();
+            return binder;
         }
     }
 }

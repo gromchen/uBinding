@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel;
 using uBinding.Binders;
+using uBinding.BindingSets;
 using uBinding.Changables;
 using uBinding.Converters;
 using uBinding.Core;
 
 namespace uBinding.Descriptions
 {
-    public class BindingDescription<TSourceValue, TTargetValue> : IDescription
+    public class BindingDescription<TSourceValue, TTargetValue>
     {
         private readonly INotifyPropertyChanged _source;
         private readonly string _sourcePropertyName;
@@ -26,6 +27,8 @@ namespace uBinding.Descriptions
             _targetPropertyName = targetPropertyName;
         }
 
+        public BindingSet Set { private get; set; }
+
         public IBinder Apply()
         {
             var source = new BindableSource<TSourceValue>(_source, _sourcePropertyName, _mode);
@@ -33,13 +36,15 @@ namespace uBinding.Descriptions
             var sourceValueType = typeof (TSourceValue);
             var targetValueType = typeof (TTargetValue);
 
+            IBinder binder;
+
             if (sourceValueType == targetValueType)
             {
                 if (_converter != null)
                     throw new InvalidOperationException("Converter is redundant if types are the same.");
 
                 var target = new BindableTarget<TSourceValue>(_target, _targetPropertyName, _raiser, _mode);
-                return new Binder<TSourceValue>(source, target, _mode);
+                binder = new Binder<TSourceValue>(source, target, _mode);
             }
             else
             {
@@ -52,8 +57,14 @@ namespace uBinding.Descriptions
                 }
 
                 var target = new BindableTarget<TTargetValue>(_target, _targetPropertyName, _raiser, _mode);
-                return new Binder<TSourceValue, TTargetValue>(source, target, _converter, _mode);
+                binder = new Binder<TSourceValue, TTargetValue>(source, target, _converter, _mode);
             }
+
+            if (Set == null) throw new InvalidOperationException("Binding set is not set");
+                
+            Set.Add(binder);
+            binder.Start();
+            return binder;
         }
 
         public BindingDescription<TSourceValue, TTargetValue> With(Action<IInvokable> action)

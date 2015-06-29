@@ -2,32 +2,22 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using uBinding.Binders;
 using uBinding.Collections;
 using uBinding.Contexts;
-using uBinding.Descriptions;
 
 namespace uBinding.BindingSets
 {
     public class BindingSet : IBindingSet, IDisposable
     {
-        private readonly List<IDisposable> _binders = new List<IDisposable>();
-        private readonly List<IDescription> _descriptions = new List<IDescription>();
-
-        public void Add(IDescription description)
-        {
-            _descriptions.Add(description);
-        }
-
-        public void Dispose()
-        {
-            foreach (var binder in _binders)
-            {
-                binder.Dispose();
-            }
-        }
+        private readonly List<IBinder> _binders = new List<IBinder>();
+        private uint _addNumber;
+        private uint _bindNumber;
 
         public SourceBindingContext<TValue> Bind<TValue>(Expression<Func<TValue>> sourceExpression)
         {
+            ThrowIfNotAppliedBinder();
+
             var unaryExpression = sourceExpression.Body as UnaryExpression;
 
             var memberExpression = unaryExpression != null
@@ -46,24 +36,34 @@ namespace uBinding.BindingSets
 
             var source = Expression.Lambda<Func<INotifyPropertyChanged>>(expression).Compile()();
 
-            return new SourceBindingContext<TValue>(this, source, memberExpression.Member.Name);
+            _bindNumber++;
+            return new SourceBindingSetContext<TValue>(this, source, memberExpression.Member.Name);
         }
 
         public CollectionBindingContext<T> Bind<T>(IReadonlyObservableCollection<T> collection)
         {
-            return new CollectionBindingContext<T>(this, collection);
+            ThrowIfNotAppliedBinder();
+            _bindNumber++;
+            return new CollectionBindingSetContext<T>(this, collection);
         }
 
-        public void Apply()
+        public void Dispose()
         {
-            foreach (var description in _descriptions)
+            foreach (var binder in _binders)
             {
-                var binder = description.Apply();
-                binder.Start();
-                _binders.Add(binder);
+                binder.Stop();
             }
+        }
 
-            _descriptions.Clear();
+        private void ThrowIfNotAppliedBinder()
+        {
+            if (_bindNumber != _addNumber) throw new InvalidOperationException("There is not applied binder");
+        }
+
+        public void Add(IBinder binder)
+        {
+            _addNumber++;
+            _binders.Add(binder);
         }
     }
 }

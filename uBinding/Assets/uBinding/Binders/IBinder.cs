@@ -1,9 +1,8 @@
-﻿using System;
-
-namespace uBinding.Binders
+﻿namespace uBinding.Binders
 {
-    public interface IBinder : IDisposable
+    public interface IBinder
     {
         void Start();
+        void Stop();
     }
 }

@@ -8,6 +8,7 @@ namespace uBinding.Binders
     {
         private readonly IReadonlyObservableCollection<T> _collection;
         private readonly Action<BindingCollectionChange<T>> _updateAction;
+        private bool _isStopped;
 
         public CollectionBinder(IReadonlyObservableCollection<T> collection,
             Action<BindingCollectionChange<T>> updateAction)
@@ -16,15 +17,19 @@ namespace uBinding.Binders
             _updateAction = updateAction;
         }
 
-        public void Dispose()
-        {
-            _collection.Changed -= CollectionOnChanged;
-        }
-
         public void Start()
         {
             _updateAction(new BindingCollectionChange<T>(_collection, true));
             _collection.Changed += CollectionOnChanged;
+        }
+
+        public void Stop()
+        {
+            if (_isStopped)
+                return;
+
+            _collection.Changed -= CollectionOnChanged;
+            _isStopped = true;
         }
 
         private void CollectionOnChanged(CollectionChange<T> change)

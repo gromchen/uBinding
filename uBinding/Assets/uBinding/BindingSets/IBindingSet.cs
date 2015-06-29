@@ -1,9 +1,13 @@
-﻿using uBinding.Descriptions;
+﻿using System;
+using System.Linq.Expressions;
+using uBinding.Collections;
+using uBinding.Contexts;
 
 namespace uBinding.BindingSets
 {
     public interface IBindingSet
     {
-        void Add(IDescription description);
+        SourceBindingContext<TValue> Bind<TValue>(Expression<Func<TValue>> sourceExpression);
+        CollectionBindingContext<T> Bind<T>(IReadonlyObservableCollection<T> collection);
     }
 }

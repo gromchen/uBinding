@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
-using uBinding.BindingSets;
 using uBinding.Descriptions;
 
 namespace uBinding.Contexts
@@ -9,17 +8,15 @@ namespace uBinding.Contexts
     public class SourceBindingContext<TSourceValue>
     {
         private readonly string _propertyName;
-        private readonly IBindingSet _set;
         private readonly INotifyPropertyChanged _source;
 
-        public SourceBindingContext(IBindingSet set, INotifyPropertyChanged source, string propertyName)
+        public SourceBindingContext(INotifyPropertyChanged source, string propertyName)
         {
-            _set = set;
             _source = source;
             _propertyName = propertyName;
         }
 
-        public BindingDescription<TSourceValue, TTargetValue> To<TTargetValue>(
+        public virtual BindingDescription<TSourceValue, TTargetValue> To<TTargetValue>(
             Expression<Func<TTargetValue>> targetExpression)
         {
             var unaryExpression = targetExpression.Body as UnaryExpression;
@@ -30,15 +27,13 @@ namespace uBinding.Contexts
 
             var target = Expression.Lambda<Func<object>>(memberExpression.Expression).Compile()();
 
-            var description = new BindingDescription<TSourceValue, TTargetValue>(_source, _propertyName, target,
+            return new BindingDescription<TSourceValue, TTargetValue>(_source, _propertyName, target,
                 memberExpression.Member.Name);
-            _set.Add(description);
-            return description;
         }
 
-        public void To(Action action)
+        public virtual MethodBindingDescription<TSourceValue> To(Action<TSourceValue> action)
         {
-            _set.Add(new MethodBindingDescription<TSourceValue>(_source, _propertyName, action));
+            return new MethodBindingDescription<TSourceValue>(_source, _propertyName, action);
         }
     }
 }

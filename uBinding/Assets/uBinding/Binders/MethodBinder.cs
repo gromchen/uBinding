@@ -7,19 +7,21 @@ namespace uBinding.Binders
     /// <summary>
     ///     todo: use <see cref="IBinder" />
     /// </summary>
-    public class MethodBinder : Binder
+    public class MethodBinder<TValue> : Binder
     {
-        private readonly Action _action;
+        private readonly IBindable<TValue> _source;
+        private readonly Action<TValue> _action;
 
-        public MethodBinder(IChangable source, Action action)
+        public MethodBinder(IBindable<TValue> source, Action<TValue> action)
             : base(source, new EmptyChangable(), BindingMode.OneWay)
         {
+            _source = source;
             _action = action;
         }
 
         protected override void UpdateTarget()
         {
-            _action();
+            _action(_source.Value);
         }
 
         protected override void UpdateSource()

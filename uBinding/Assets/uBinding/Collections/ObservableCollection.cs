@@ -16,9 +16,13 @@ namespace uBinding.Collections
 
         public void AddRange(IEnumerable<T> items)
         {
-            var collection = items as T[] ?? items.ToArray();
-            _items.AddRange(collection);
-            OnChanged(new CollectionChange<T>(collection));
+            var array = items as T[] ?? items.ToArray();
+
+            if (array.Length <= 0)
+                return;
+
+            _items.AddRange(array);
+            OnChanged(new CollectionChange<T>(array));
         }
 
         public void CopyTo(T[] array, int arrayIndex)
