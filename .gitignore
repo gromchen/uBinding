@@ -5,3 +5,5 @@ uBinding/obj/
 uBinding/*.sln
 uBinding/*.DotSettings
 uBinding/*.csproj
+uBinding/Assets/UnityVS/
+uBinding/Assets/UnityVS.meta
